@@ -19,6 +19,7 @@ Four files, no framework, no bundler:
 - **`style.css`** — Dark/retro arcade theme; uses CSS variables, flexbox, and `backdrop-filter` on overlays.
 - **`records.js`** — Local records table (`localStorage['tetris-records']`), start screen, name entry. Loaded after `game.js` (shared global scope); calls `init()` on "Jugar"; `endGame()` triggers its `onGameOver()` hook; `combo`/`maxCombo` are tracked in `game.js`.
 - **`game.js`** — All game logic (~305 lines, `'use strict'`, no modules).
+- **`skins.js`** — Skins visuales (retro, neon, pastel, pixel): `SKINS`, `activeSkin`, `applySkin()`; cargado después de `game.js`; preferencia en `localStorage['tetris-skin']`. `drawBlock()`/`drawGrid()` de game.js delegan en `activeSkin`.
 
 ### game.js internals
 

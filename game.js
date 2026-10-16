@@ -166,6 +166,11 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
+  // skins.js (cargado después) define activeSkin; sin él se usa el estilo retro
+  if (typeof activeSkin !== 'undefined' && activeSkin) {
+    activeSkin.drawBlock(context, x, y, colorIndex, size, alpha);
+    return;
+  }
   const color = COLORS[colorIndex];
   context.globalAlpha = alpha ?? 1;
   context.fillStyle = color;
@@ -177,7 +182,9 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
 }
 
 function drawGrid() {
-  ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--grid-line').trim();
+  ctx.strokeStyle = (typeof activeSkin !== 'undefined' && activeSkin && activeSkin.gridColor)
+    ? activeSkin.gridColor()
+    : getComputedStyle(document.body).getPropertyValue('--grid-line').trim();
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
