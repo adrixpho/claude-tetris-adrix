@@ -42,7 +42,10 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 
+let startLevel = 1;
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
+let combo = 0, maxCombo = 0;
+gameOver = true; // hasta que arranque la primera partida (pantalla de inicio en records.js)
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -108,9 +111,13 @@ function clearLines() {
   if (cleared) {
     lines += cleared;
     score += (LINE_SCORES[cleared] || 0) * level;
-    level = Math.floor(lines / 10) + 1;
+    level = startLevel + Math.floor(lines / 10);
     dropInterval = Math.max(100, 1000 - (level - 1) * 90);
     updateHUD();
+    combo++;
+    if (combo > maxCombo) maxCombo = combo;
+  } else {
+    combo = 0;
   }
 }
 
@@ -160,6 +167,11 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
+  // skins.js (cargado después) define activeSkin; sin él se usa el estilo retro
+  if (typeof activeSkin !== 'undefined' && activeSkin) {
+    activeSkin.drawBlock(context, x, y, colorIndex, size, alpha);
+    return;
+  }
   const color = COLORS[colorIndex];
   context.globalAlpha = alpha ?? 1;
   context.fillStyle = color;
@@ -171,7 +183,9 @@ function drawBlock(context, x, y, colorIndex, size, alpha) {
 }
 
 function drawGrid() {
-  ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--grid-line').trim();
+  ctx.strokeStyle = (typeof activeSkin !== 'undefined' && activeSkin && activeSkin.gridColor)
+    ? activeSkin.gridColor()
+    : getComputedStyle(document.body).getPropertyValue('--grid-line').trim();
   ctx.lineWidth = 0.5;
   for (let c = 1; c < COLS; c++) {
     ctx.beginPath();
@@ -226,19 +240,26 @@ function endGame() {
   overlayTitle.textContent = 'GAME OVER';
   overlayScore.textContent = `Puntuación: ${score.toLocaleString()}`;
   overlay.classList.remove('hidden');
+  if (typeof onGameOver === 'function') onGameOver();
 }
 
 function togglePause() {
   if (gameOver) return;
   paused = !paused;
   if (!paused) {
+    if (typeof hidePauseMenu === 'function') hidePauseMenu();
+    dropAccum = 0;
     lastTime = performance.now();
     loop(lastTime);
   } else {
     cancelAnimationFrame(animId);
-    overlayTitle.textContent = 'PAUSA';
-    overlayScore.textContent = '';
-    overlay.classList.remove('hidden');
+    if (typeof showPauseMenu === 'function') {
+      showPauseMenu();
+    } else {
+      overlayTitle.textContent = 'PAUSA';
+      overlayScore.textContent = '';
+      overlay.classList.remove('hidden');
+    }
   }
 }
 
@@ -263,22 +284,35 @@ function init() {
   board = createBoard();
   score = 0;
   lines = 0;
-  level = 1;
+  try {
+    const saved = parseInt(localStorage.getItem('tetris-start-level'), 10);
+    startLevel = saved >= 1 && saved <= 15 ? saved : 1;
+  } catch (e) { startLevel = 1; }
+  level = startLevel;
   paused = false;
   gameOver = false;
-  dropInterval = 1000;
+  combo = 0;
+  maxCombo = 0;
+  dropInterval = Math.max(100, 1000 - (level - 1) * 90);
   dropAccum = 0;
   lastTime = performance.now();
   next = randomPiece();
   spawn();
   updateHUD();
   overlay.classList.add('hidden');
+  if (typeof hidePauseMenu === 'function') hidePauseMenu();
   cancelAnimationFrame(animId);
   animId = requestAnimationFrame(loop);
 }
 
 document.addEventListener('keydown', e => {
-  if (e.code === 'KeyP') { togglePause(); return; }
+  if (e.target.closest && e.target.closest('input, textarea')) return;
+  if (e.code === 'KeyP' || e.code === 'Escape') {
+    // Escape dentro del <select> solo cierra su desplegable
+    if (e.repeat || (e.code === 'Escape' && e.target.tagName === 'SELECT')) return;
+    togglePause();
+    return;
+  }
   if (paused || gameOver) return;
   switch (e.code) {
     case 'ArrowLeft':
@@ -329,4 +363,4 @@ themeToggle.addEventListener('click', () => {
   localStorage.setItem('tetris-theme', isLight ? 'light' : 'dark');
 });
 
-init();
+// init() lo invoca records.js al pulsar "Jugar" en la pantalla de inicio
