@@ -13,10 +13,11 @@ python3 -m http.server 8000      # then visit http://localhost:8000
 
 ## Architecture
 
-Three files, no framework, no bundler:
+Four files, no framework, no bundler:
 
 - **`index.html`** — DOM structure: `<canvas id="board">` (300×600px) for the playfield, `<canvas id="next-canvas">` (120×120px) for the preview, sidebar HUD (`#score`, `#lines`, `#level`), and a shared overlay `#overlay` for both PAUSE and GAME OVER states.
 - **`style.css`** — Dark/retro arcade theme; uses CSS variables, flexbox, and `backdrop-filter` on overlays.
+- **`records.js`** — Local records table (`localStorage['tetris-records']`), start screen, name entry. Loaded after `game.js` (shared global scope); calls `init()` on "Jugar"; `endGame()` triggers its `onGameOver()` hook; `combo`/`maxCombo` are tracked in `game.js`.
 - **`game.js`** — All game logic (~305 lines, `'use strict'`, no modules).
 
 ### game.js internals
@@ -36,7 +37,7 @@ Three files, no framework, no bundler:
 
 ### Game flow
 
-`init()` → `spawn()` → `requestAnimationFrame(loop)`. Each frame: accumulate dt → auto-drop or `lockPiece()` → `draw()`. `lockPiece()` = `merge()` + `clearLines()` + `spawn()`. If `spawn()` immediately collides → `endGame()`.
+Start screen (`records.js`) → "Jugar"/Enter → `init()` → `spawn()` → `requestAnimationFrame(loop)`. Each frame: accumulate dt → auto-drop or `lockPiece()` → `draw()`. `lockPiece()` = `merge()` + `clearLines()` + `spawn()`. If `spawn()` immediately collides → `endGame()`.
 
 ## Tunable constants (top of game.js)
 
