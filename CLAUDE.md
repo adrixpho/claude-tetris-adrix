@@ -13,11 +13,12 @@ python3 -m http.server 8000      # then visit http://localhost:8000
 
 ## Architecture
 
-Three files, no framework, no bundler:
+Four files, no framework, no bundler:
 
 - **`index.html`** — DOM structure: `<canvas id="board">` (300×600px) for the playfield, `<canvas id="next-canvas">` (120×120px) for the preview, sidebar HUD (`#score`, `#lines`, `#level`), and a shared overlay `#overlay` for both PAUSE and GAME OVER states.
 - **`style.css`** — Dark/retro arcade theme; uses CSS variables, flexbox, and `backdrop-filter` on overlays.
 - **`game.js`** — All game logic (~305 lines, `'use strict'`, no modules).
+- **`skins.js`** — Skins visuales (retro, neon, pastel, pixel): `SKINS`, `activeSkin`, `applySkin()`; cargado después de `game.js`; preferencia en `localStorage['tetris-skin']`. `drawBlock()`/`drawGrid()` de game.js delegan en `activeSkin`.
 
 ### game.js internals
 
