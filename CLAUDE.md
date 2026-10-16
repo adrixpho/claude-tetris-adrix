@@ -13,11 +13,12 @@ python3 -m http.server 8000      # then visit http://localhost:8000
 
 ## Architecture
 
-Four files, no framework, no bundler:
+Six files, no framework, no bundler:
 
 - **`index.html`** — DOM structure: `<canvas id="board">` (300×600px) for the playfield, `<canvas id="next-canvas">` (120×120px) for the preview, sidebar HUD (`#score`, `#lines`, `#level`), and a shared overlay `#overlay` for both PAUSE and GAME OVER states.
 - **`style.css`** — Dark/retro arcade theme; uses CSS variables, flexbox, and `backdrop-filter` on overlays.
 - **`records.js`** — Local records table (`localStorage['tetris-records']`), start screen, name entry. Loaded after `game.js` (shared global scope); calls `init()` on "Jugar"; `endGame()` triggers its `onGameOver()` hook; `combo`/`maxCombo` are tracked in `game.js`.
+- **`pause-menu.js`** — Menú de pausa (`#pause-menu`): Reanudar, Reiniciar, Ver controles, Nivel inicial (`localStorage['tetris-start-level']`). Cargado después de `game.js`; expone `showPauseMenu()`/`hidePauseMenu()`, que `togglePause()` e `init()` invocan. `P`/`Escape` pausan.
 - **`game.js`** — All game logic (~305 lines, `'use strict'`, no modules).
 - **`skins.js`** — Skins visuales (retro, neon, pastel, pixel): `SKINS`, `activeSkin`, `applySkin()`; cargado después de `game.js`; preferencia en `localStorage['tetris-skin']`. `drawBlock()`/`drawGrid()` de game.js delegan en `activeSkin`.
 
@@ -32,7 +33,7 @@ Four files, no framework, no bundler:
 | Game loop | `loop(ts)` via `requestAnimationFrame`; `dropAccum` tracks elapsed ms against `dropInterval` |
 | Line clear | `clearLines()` — iterates board bottom-up, splices full rows, prepends empty row |
 | Scoring | `LINE_SCORES = [0,100,300,500,800]` × `level`; hard drop +2/cell, soft drop +1/row |
-| Speed | `dropInterval = max(100, 1000 − (level−1) × 90)` ms; level = `floor(lines/10) + 1` |
+| Speed | `dropInterval = max(100, 1000 − (level−1) × 90)` ms; level = `startLevel + floor(lines/10)` (`startLevel` from `localStorage['tetris-start-level']`, read in `init()`) |
 | Ghost piece | `ghostY()` — projects current piece down until collision; drawn at `globalAlpha = 0.2` |
 | State flags | `paused`, `gameOver`, `animId` (RAF handle) |
 
