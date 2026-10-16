@@ -52,11 +52,28 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+        <form id="name-form" class="name-form hidden" autocomplete="off">
+          <label for="name-input">¡Entraste al top 5! Tu nombre:</label>
+          <div class="name-row">
+            <input id="name-input" type="text" maxlength="12" placeholder="Nombre" />
+            <button type="submit" id="save-record-btn">Guardar</button>
+          </div>
+        </form>
+        <div id="go-records" class="records hidden"></div>
         <button id="restart-btn">Reiniciar</button>
+      </div>
+    </div>
+
+    <div id="start-overlay" class="overlay">
+      <div class="overlay-box">
+        <p id="start-title">TETRIS</p>
+        <div id="start-records" class="records"></div>
+        <button id="start-btn">Jugar</button>
       </div>
     </div>
   </div>
 
   <script src="game.js"></script>
+  <script src="records.js"></script>
 </body>
 </html>
